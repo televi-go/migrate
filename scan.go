@@ -11,10 +11,25 @@ type migration struct {
 	statements    []string
 }
 
+func isEmptyStatement(s string) bool {
+	if len(s) == 0 {
+		return true
+	}
+	switch s[0] {
+	case '\t', ' ', '\n', '\r':
+		return isEmptyStatement(s[1:])
+	default:
+		return false
+	}
+}
+
 func getStatements(content string) []string {
 	raw := strings.Split(content, ";")
 	var result []string
 	for _, statement := range raw {
+		if isEmptyStatement(statement) {
+			continue
+		}
 		result = append(result, statement)
 	}
 	return result
