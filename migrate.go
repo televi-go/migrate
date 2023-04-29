@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"database/sql"
+	"golang.org/x/exp/slices"
 )
 
 type dialect int
@@ -69,17 +70,14 @@ func runMigration(db *sql.DB, migration migration, dialect dialect) (err error) 
 	return nil
 }
 
-func RunMigrationsUp(db *sql.DB, path string, dialect dialect) error {
-	migrations, err := traverseDir(path, "")
+func runMigrationsCore(db *sql.DB, migrations []migration, dialect dialect) error {
+	err := createMigrationsTable(db)
 	if err != nil {
 		return err
 	}
-
-	err = createMigrationsTable(db)
-	if err != nil {
-		return err
-	}
-
+	slices.SortFunc(migrations, func(a, b migration) bool {
+		return a.qualifiedName < b.qualifiedName
+	})
 	for _, migration := range migrations {
 		err = runMigration(db, migration, dialect)
 		if err != nil {
@@ -87,4 +85,12 @@ func RunMigrationsUp(db *sql.DB, path string, dialect dialect) error {
 		}
 	}
 	return nil
+}
+
+func RunMigrationsUp(db *sql.DB, path string, dialect dialect) error {
+	migrations, err := traverseDir(path, "")
+	if err != nil {
+		return err
+	}
+	return runMigrationsCore(db, migrations, dialect)
 }
