@@ -11,6 +11,11 @@ type migration struct {
 	statements    []string
 }
 
+func (m migration) Name() string {
+	parts := strings.Split(m.qualifiedName, ".")
+	return parts[0]
+}
+
 func isEmptyStatement(s string) bool {
 	if len(s) == 0 {
 		return true

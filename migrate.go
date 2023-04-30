@@ -76,7 +76,7 @@ func runMigrationsCore(db *sql.DB, migrations []migration, dialect dialect) erro
 		return err
 	}
 	slices.SortFunc(migrations, func(a, b migration) bool {
-		return a.qualifiedName < b.qualifiedName
+		return a.Name() < b.Name()
 	})
 	for _, migration := range migrations {
 		err = runMigration(db, migration, dialect)
