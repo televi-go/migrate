@@ -60,9 +60,10 @@ func RunInEmbed(db *sql.DB, rootName string, fs embed.FS, dialect dialect) error
 	var migrations []migration
 	for _, entry := range entries {
 		entryMigrations, err := processEntryEmbed(fs,
-			fmt.Sprintf("%s%c%s", rootName, os.PathSeparator, entry.Name()),
+			fmt.Sprintf("%s/%s", rootName, entry.Name()),
 			entry,
-			db, dialect,
+			db,
+			dialect,
 		)
 		if err != nil {
 			return err
