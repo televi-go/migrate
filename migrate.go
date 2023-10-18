@@ -2,7 +2,9 @@ package migrate
 
 import (
 	"database/sql"
+	"embed"
 	"golang.org/x/exp/slices"
+	"strings"
 )
 
 type dialect int
@@ -85,6 +87,61 @@ func runMigrationsCore(db *sql.DB, migrations []migration, dialect dialect) erro
 		}
 	}
 	return nil
+}
+
+type MigrationExecutor interface {
+	IsMigrationAdded(name string) (bool, error)
+	GetManager() (TransactionManager, error)
+}
+
+type TransactionManager interface {
+	Execute(statement string) error
+	AddMigration(name string) error
+	Commit() error
+	Rollback()
+}
+
+type migrationWrap struct {
+	MigrationExecutor
+}
+
+func (m migrationWrap) checkAndExecute(content, name string) (err error) {
+
+	isAdded, err := m.IsMigrationAdded(name)
+	if err != nil {
+		return err
+	}
+	if isAdded {
+		return nil
+	}
+	manager, err := m.GetManager()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			manager.Rollback()
+			return
+		}
+		err = manager.Commit()
+	}()
+	statements := strings.Split(content, ";")
+	for _, statement := range statements {
+		if isEmptyStatement(statement) {
+			continue
+		}
+		err := manager.Execute(statement)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = manager.AddMigration(name)
+	return err
+}
+
+func RunMigrationsWithExecutor(fs embed.FS, executor MigrationExecutor) error {
+	return traverseFS(fs, migrationWrap{executor}.checkAndExecute)
 }
 
 func RunMigrationsUp(db *sql.DB, path string, dialect dialect) error {

@@ -1,3 +1,5 @@
+--depends:
+
 create table a (
     x varchar(320) not null
 );
