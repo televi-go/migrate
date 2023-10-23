@@ -3,7 +3,7 @@ package migrate
 import (
 	"database/sql"
 	"embed"
-	"golang.org/x/exp/slices"
+	"slices"
 	"strings"
 )
 
@@ -77,8 +77,14 @@ func runMigrationsCore(db *sql.DB, migrations []migration, dialect dialect) erro
 	if err != nil {
 		return err
 	}
-	slices.SortFunc(migrations, func(a, b migration) bool {
-		return a.Name() < b.Name()
+	slices.SortFunc(migrations, func(a, b migration) int {
+		if a.Name() == b.Name() {
+			return 0
+		}
+		if a.Name() < b.Name() {
+			return -1
+		}
+		return 1
 	})
 	for _, migration := range migrations {
 		err = runMigration(db, migration, dialect)
