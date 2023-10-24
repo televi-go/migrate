@@ -14,7 +14,7 @@ func traverseFS(fs embed.FS, rootDir string, onFile func(content, name string) e
 		if file.IsDir() {
 			continue
 		}
-		content, err := fs.ReadFile(file.Name())
+		content, err := fs.ReadFile(rootDir + "/" + file.Name())
 		if err != nil {
 			return err
 		}
