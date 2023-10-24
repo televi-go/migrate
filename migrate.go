@@ -146,8 +146,8 @@ func (m migrationWrap) checkAndExecute(content, name string) (err error) {
 	return err
 }
 
-func RunMigrationsWithExecutor(fs embed.FS, executor MigrationExecutor) error {
-	return traverseFS(fs, migrationWrap{executor}.checkAndExecute)
+func RunMigrationsWithExecutor(fs embed.FS, executor MigrationExecutor, rootDir string) error {
+	return traverseFS(fs, rootDir, migrationWrap{executor}.checkAndExecute)
 }
 
 func RunMigrationsUp(db *sql.DB, path string, dialect dialect) error {

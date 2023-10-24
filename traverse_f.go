@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func traverseFS(fs embed.FS, onFile func(content, name string) error) error {
-	files, err := fs.ReadDir(".")
+func traverseFS(fs embed.FS, rootDir string, onFile func(content, name string) error) error {
+	files, err := fs.ReadDir(rootDir)
 	if err != nil {
 		return err
 	}
